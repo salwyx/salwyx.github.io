@@ -32,3 +32,14 @@ html[data-theme=dark] .art-divider,html[data-theme=dark] .portrait-frame{border-
 @media(prefers-reduced-motion:reduce){.theme-slider,.theme-slider:before{transition:none}}
 
 .palette-panel{border-bottom:3px solid var(--secondary)}.about-copy{background:color-mix(in srgb,var(--surface) 96%,var(--secondary))!important}.design-sample{background:color-mix(in srgb,var(--surface) 92%,var(--secondary))!important}
+
+/* Brand colours stay intact in either theme. */
+.ai-tool-marks img,.ai-tool-strip img,.ai-mini-icons img{filter:none!important}
+.palette-preview{grid-column:1/-1;overflow:hidden;background:var(--surface-alt);border:1px solid var(--line);border-radius:9px;padding:15px 18px;position:relative}
+.palette-preview:before{content:"";position:absolute;right:0;top:0;width:26%;height:100%;background:var(--secondary);opacity:.18;transform:skewX(-15deg);transform-origin:bottom}
+.palette-preview-word{display:flex;align-items:center;justify-content:space-between;font:900 64px/.95 Arial,sans-serif;letter-spacing:-4px;color:var(--accent-text);position:relative}
+.palette-preview-word>span{font-size:52px;letter-spacing:0;color:var(--secondary)}
+.palette-preview-bottom{display:flex;align-items:center;justify-content:space-between;gap:12px;border-top:1px solid var(--line);margin-top:12px;padding-top:10px;position:relative}
+.palette-preview-bottom b{font:700 10px Consolas,monospace;letter-spacing:.5px;color:var(--ink)}
+.palette-preview-chips{display:flex;gap:4px}.palette-preview-chips i{width:24px;height:12px;background:var(--accent)}.palette-preview-chips i:nth-child(2){background:var(--secondary)}.palette-preview-chips i:nth-child(3){background:var(--ink)}
+.activity img{width:100%;height:auto}
