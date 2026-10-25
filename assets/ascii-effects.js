@@ -89,12 +89,21 @@
     }
   }
   const ready=Promise.all([photo.decode().then(initPhoto),brianPhoto.decode().then(initBrian)]);
-  window.profileEffects={ready,render(kind,canvas,time){const ctx=canvas.getContext('2d');(kind==='creation'?creation:kind==='brian'?brian:kind==='redrain'?redrain:amber)(ctx,time);},recipes};
+  const frameCache=new Map();
+  window.profileEffects={ready,render(kind,canvas,time){
+    const ctx=canvas.getContext('2d');
+    if(kind==='creation'||kind==='brian'){
+      const level=window.profileLowMotion?4:Math.round((Math.sin(time*Math.PI/2)+1)*3.5),key=kind+level;
+      if(!frameCache.has(key)){const c=document.createElement('canvas');c.width=canvas.width;c.height=canvas.height;const phase=Math.asin(level/3.5-1)/(Math.PI/2);(kind==='creation'?creation:brian)(c.getContext('2d'),phase);frameCache.set(key,c);}
+      ctx.clearRect(0,0,canvas.width,canvas.height);ctx.drawImage(frameCache.get(key),0,0);return;
+    }
+    (kind==='redrain'?redrain:amber)(ctx,time);
+  },recipes};
   ready.then(()=>{
     const targets=[...document.querySelectorAll('canvas[data-effect]')];targets.forEach(c=>{c.width=c.dataset.effect==='brian'?640:W;c.height=c.dataset.effect==='brian'?640:H;});
     const reduced=matchMedia('(prefers-reduced-motion: reduce)'),active=new Set();let raf=0,last=0,elapsed=0;
     function wake(){if(!raf&&!document.hidden&&active.size)raf=requestAnimationFrame(tick);}
-    function tick(now){raf=0;if(document.hidden||!active.size)return;if(now-last>65){if(!reduced.matches)elapsed+=Math.min(.15,(now-last)/1000);active.forEach(c=>window.profileEffects.render(c.dataset.effect,c,elapsed));last=now;}if(!reduced.matches)wake();}
+    function tick(now){raf=0;if(document.hidden||!active.size)return;if(now-last>160){if(!reduced.matches&&!window.profileLowMotion)elapsed+=Math.min(.15,(now-last)/1000);active.forEach(c=>window.profileEffects.render(c.dataset.effect,c,elapsed));last=now;}if(!reduced.matches&&!window.profileLowMotion)wake();}
     const obs=new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting)active.add(e.target);else active.delete(e.target);});if(!active.size){cancelAnimationFrame(raf);raf=0;}else wake();},{rootMargin:'60px'});targets.forEach(c=>obs.observe(c));
     document.addEventListener('visibilitychange',()=>{if(document.hidden){cancelAnimationFrame(raf);raf=0;}else{last=performance.now();wake();}});reduced.addEventListener('change',()=>{last=0;wake();});
 
