@@ -78,13 +78,16 @@
     ctx.fillStyle='rgba(0,0,0,.15)';for(let y=0;y<H;y+=4)ctx.fillRect(0,y,W,1);
     const v=ctx.createRadialGradient(W/2,H/2,H*.1,W/2,H/2,W*.6);v.addColorStop(0,'transparent');v.addColorStop(1,'rgba(0,0,0,.2)');ctx.fillStyle=v;ctx.fillRect(0,0,W,H);
   }
+  let rainSurface='#fffdfb',rainInk='236,20,37';
+  function appearance(){const st=getComputedStyle(document.documentElement);rainSurface=st.getPropertyValue('--surface').trim()||'#fffdfb';const hex=st.getPropertyValue('--accent-text').trim();if(/^#[0-9a-f]{6}$/i.test(hex))rainInk=hex.slice(1).match(/../g).map(v=>parseInt(v,16)).join(',');}
+  appearance();window.addEventListener('appearancechange',appearance);
   function redrain(ctx,time){
-    const w=ctx.canvas.width,h=ctx.canvas.height;ctx.clearRect(0,0,w,h);ctx.fillStyle='#fffdfb';ctx.fillRect(0,0,w,h);
+    const w=ctx.canvas.width,h=ctx.canvas.height;ctx.clearRect(0,0,w,h);ctx.fillStyle=rainSurface;ctx.fillRect(0,0,w,h);
     ctx.font='13px "DejaVu Sans Mono",Consolas,monospace';ctx.textAlign='center';ctx.textBaseline='middle';
     const rows=Math.ceil(h/16),cols=Math.ceil(w/16),chars='0123456789ABCDEF{}<>/+=;';
     for(let col=0;col<cols;col++){const head=(time*(3.8+Math.sin(col*3.1)*1.2)+col*7.91)%rows;
       for(let row=0;row<rows;row++){const trail=(head-row+rows)%rows;if(trail>13)continue;const light=Math.pow(1-trail/13,1.1);const k=Math.abs(Math.floor(Math.sin(col*91.17+row*13.23+Math.floor(time*3))*87953.4))%chars.length;
-        ctx.fillStyle=`rgba(236,20,37,${.08+light*.8})`;ctx.fillText(chars[k],col*16+8,row*16+8);
+        ctx.fillStyle=`rgba(${rainInk},${.08+light*.8})`;ctx.fillText(chars[k],col*16+8,row*16+8);
       }
     }
   }
@@ -104,6 +107,7 @@
     const reduced=matchMedia('(prefers-reduced-motion: reduce)'),active=new Set();let raf=0,last=0,elapsed=0;
     function wake(){if(!raf&&!document.hidden&&active.size)raf=requestAnimationFrame(tick);}
     function tick(now){raf=0;if(document.hidden||!active.size)return;if(now-last>160){if(!reduced.matches&&!window.profileLowMotion)elapsed+=Math.min(.15,(now-last)/1000);active.forEach(c=>window.profileEffects.render(c.dataset.effect,c,elapsed));last=now;}if(!reduced.matches&&!window.profileLowMotion)wake();}
+    window.addEventListener('appearancechange',()=>{last=0;wake();});
     const obs=new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting)active.add(e.target);else active.delete(e.target);});if(!active.size){cancelAnimationFrame(raf);raf=0;}else wake();},{rootMargin:'60px'});targets.forEach(c=>obs.observe(c));
     document.addEventListener('visibilitychange',()=>{if(document.hidden){cancelAnimationFrame(raf);raf=0;}else{last=performance.now();wake();}});reduced.addEventListener('change',()=>{last=0;wake();});
 

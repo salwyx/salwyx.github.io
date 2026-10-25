@@ -1,0 +1,18 @@
+(() => {
+ const root=document.documentElement,accent=document.getElementById('accent-colour'),secondary=document.getElementById('secondary-colour'),toggle=document.getElementById('theme-toggle');
+ const defaults=['#ec232c','#685f70'],presets={red:defaults,blue:['#2962ff','#008a87'],green:['#168a54','#8755b8'],purple:['#8b43f1','#a47921']};
+ const copy={ru:{eyebrow:'ДИЗАЙН / ТВОЯ ПАЛИТРА',heading:'Дизайн сочетается с любыми цветами',description:'Выбери акцентный и вторичный цвета. Страница подстроится — характер останется.',accent:'Акцентный цвет',secondary:'Вторичный цвет',reset:'Сбросить',theme:'Тёмная тема'},en:{eyebrow:'DESIGN / YOUR PALETTE',heading:'Design works in any colour',description:'Pick an accent and a secondary colour. The page adapts — the character stays.',accent:'Accent colour',secondary:'Secondary colour',reset:'Reset',theme:'Dark theme'}};
+ function rgb(hex){return hex.match(/[a-f\d]{2}/gi).map(c=>parseInt(c,16)/255);}
+ function luminance(hex){return rgb(hex).map(v=>v<=.04045?v/12.92:((v+.055)/1.055)**2.4).reduce((s,v,i)=>s+v*[.2126,.7152,.0722][i],0);}
+ function blend(a,b,n){const x=rgb(a),y=rgb(b);return '#'+x.map((v,i)=>Math.round((v*(1-n)+y[i]*n)*255).toString(16).padStart(2,'0')).join('');}
+ function ratio(a,b){const x=luminance(a),y=luminance(b);return (Math.max(x,y)+.05)/(Math.min(x,y)+.05);}
+ function readable(colour,bg){const target=luminance(bg)<.3?'#ffffff':'#111111';let c=colour;for(let i=0;i<20&&ratio(c,bg)<4.5;i++)c=blend(c,target,.14);return c;}
+ let scheduled=0;
+ function apply(){scheduled=0;const dark=toggle.checked,a=accent.value,b=secondary.value;root.dataset.theme=dark?'dark':'light';root.style.setProperty('--accent',a);root.style.setProperty('--secondary',b);root.style.setProperty('--on-accent',luminance(a)>.179?'#111111':'#ffffff');root.style.setProperty('--accent-text',readable(a,dark?'#1b1d22':'#ffffff'));root.style.setProperty('--muted',readable(blend(b,dark?'#b2adb9':'#6e656c',.65),dark?'#1b1d22':'#ffffff'));root.style.setProperty('--surface-alt',blend(dark?'#23262c':'#f0eeeb',b,dark?.08:.045));accent.nextElementSibling.value=a.toUpperCase();secondary.nextElementSibling.value=b.toUpperCase();try{localStorage.setItem('profile-theme',dark?'dark':'light');localStorage.setItem('profile-accent',a);localStorage.setItem('profile-secondary',b);}catch{}window.dispatchEvent(new Event('appearancechange'));}
+ function schedule(){if(!scheduled)scheduled=requestAnimationFrame(apply);}
+ let storedA,storedB;try{storedA=localStorage.getItem('profile-accent');storedB=localStorage.getItem('profile-secondary');}catch{}
+ accent.value=/^#[0-9a-f]{6}$/i.test(storedA||'')?storedA:defaults[0];secondary.value=/^#[0-9a-f]{6}$/i.test(storedB||'')?storedB:defaults[1];toggle.checked=root.dataset.theme==='dark';
+ accent.addEventListener('input',schedule);secondary.addEventListener('input',schedule);toggle.addEventListener('change',apply);document.querySelectorAll('[data-preset]').forEach(b=>b.addEventListener('click',()=>{[accent.value,secondary.value]=presets[b.dataset.preset];apply();}));document.querySelector('.palette-reset').addEventListener('click',()=>{[accent.value,secondary.value]=defaults;apply();});
+ function translate(){const t=copy[root.lang==='ru'?'ru':'en'];document.querySelectorAll('[data-appearance-copy]').forEach(el=>el.textContent=t[el.dataset.appearanceCopy]);accent.setAttribute('aria-label',t.accent);secondary.setAttribute('aria-label',t.secondary);toggle.setAttribute('aria-label',t.theme);toggle.parentElement.title=t.theme;}
+ new MutationObserver(translate).observe(root,{attributes:true,attributeFilter:['lang']});translate();apply();
+})();
