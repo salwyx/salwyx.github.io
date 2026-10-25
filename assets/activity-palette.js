@@ -7,7 +7,8 @@
   frame=0;if(!source)return;
   const css=getComputedStyle(document.documentElement);
   const accent=css.getPropertyValue('--accent').trim();
-  const surface=css.getPropertyValue('--surface').trim();
+  const rawSurface=css.getPropertyValue('--surface').trim();
+  const surface=rawSurface.length===4?'#'+[...rawSurface.slice(1)].map(c=>c+c).join(''):rawSurface;
   const dark=document.documentElement.dataset.theme==='dark';
   const key=accent+surface+dark;if(key===last)return;last=key;
   const mix=(a,b,n)=>'#'+[1,3,5].map(i=>Math.round(parseInt(a.slice(i,i+2),16)*n+parseInt(b.slice(i,i+2),16)*(1-n)).toString(16).padStart(2,'0')).join('');
