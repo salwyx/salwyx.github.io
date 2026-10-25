@@ -1,0 +1,8 @@
+(() => {
+ const attributes=[['.guitar-card','aria-label','Red Special — open my Brian May corner','Red Special — открыть мой уголок Brian May'],['.interactive-ascii','aria-label','fastboot — interactive ASCII lettering','fastboot — интерактивная ASCII-надпись'],['.art-divider canvas','aria-label','Animated dither artwork of the Creation of Adam','Сотворение Адама — анимированный ASCII-арт'],['.portrait-frame canvas','aria-label','Animated dither portrait from the supplied Brian May image','Brian May — анимированный ASCII-портрет'],['.activity img','alt','My contribution snake — updated daily from GitHub activity','Змейка моей активности на GitHub — обновляется ежедневно']];
+ const translations=JSON.parse(document.getElementById('translations').textContent);let current='en';
+ function apply(lang){current=lang==='ru'?'ru':'en';document.querySelectorAll('[data-i18n]').forEach(el=>{el.innerHTML=translations[el.dataset.i18n][current];});attributes.forEach(([selector,attr,en,ru])=>document.querySelector(selector)?.setAttribute(attr,current==='ru'?ru:en));document.documentElement.lang=current;document.querySelectorAll('[data-language]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.language===current)));document.title=current==='ru'?'fastboot — дизайнер, разработчик, гитарист':'fastboot — designer, coder, guitarist';try{localStorage.setItem('profile-language',current);}catch{}window.dispatchEvent(new Event('resize'));}
+ let saved;try{saved=localStorage.getItem('profile-language');}catch{}
+ apply(saved||((navigator.language||'').toLowerCase().startsWith('ru')?'ru':'en'));
+ document.querySelectorAll('[data-language]').forEach(b=>b.addEventListener('click',()=>apply(b.dataset.language)));
+})();

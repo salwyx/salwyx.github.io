@@ -92,11 +92,11 @@
   window.profileEffects={ready,render(kind,canvas,time){const ctx=canvas.getContext('2d');(kind==='creation'?creation:kind==='brian'?brian:kind==='redrain'?redrain:amber)(ctx,time);},recipes};
   ready.then(()=>{
     const targets=[...document.querySelectorAll('canvas[data-effect]')];targets.forEach(c=>{c.width=c.dataset.effect==='brian'?640:W;c.height=c.dataset.effect==='brian'?640:H;});
-    let paused=matchMedia('(prefers-reduced-motion: reduce)').matches,visible=true,start=performance.now(),last=0,elapsed=0;
-    const obs=new IntersectionObserver(entries=>entries.forEach(e=>e.target.dataset.visible=String(e.isIntersecting)));targets.forEach(c=>obs.observe(c));
-    document.addEventListener('visibilitychange',()=>visible=!document.hidden);
-    const button=document.querySelector('[data-motion-toggle]');if(button){button.textContent=paused?'Включить анимацию':'Приостановить анимацию';button.onclick=()=>{paused=!paused;button.textContent=paused?'Включить анимацию':'Приостановить анимацию';button.setAttribute('aria-pressed',String(paused));};}
-    function tick(now){if(now-last>65){if(!paused&&visible)elapsed+=Math.min(.15,(now-last)/1000);targets.forEach(c=>{if(c.dataset.visible!=='false')window.profileEffects.render(c.dataset.effect,c,elapsed);});last=now;}requestAnimationFrame(tick);}
-    requestAnimationFrame(tick);
+    const reduced=matchMedia('(prefers-reduced-motion: reduce)'),active=new Set();let raf=0,last=0,elapsed=0;
+    function wake(){if(!raf&&!document.hidden&&active.size)raf=requestAnimationFrame(tick);}
+    function tick(now){raf=0;if(document.hidden||!active.size)return;if(now-last>65){if(!reduced.matches)elapsed+=Math.min(.15,(now-last)/1000);active.forEach(c=>window.profileEffects.render(c.dataset.effect,c,elapsed));last=now;}if(!reduced.matches)wake();}
+    const obs=new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting)active.add(e.target);else active.delete(e.target);});if(!active.size){cancelAnimationFrame(raf);raf=0;}else wake();},{rootMargin:'60px'});targets.forEach(c=>obs.observe(c));
+    document.addEventListener('visibilitychange',()=>{if(document.hidden){cancelAnimationFrame(raf);raf=0;}else{last=performance.now();wake();}});reduced.addEventListener('change',()=>{last=0;wake();});
+
   }).catch(()=>document.querySelectorAll('canvas[data-effect]').forEach(c=>c.replaceWith(Object.assign(document.createElement('img'),{src:`assets/${c.dataset.effect}-effect.gif`,alt:c.getAttribute('aria-label')}))));
 })();
